@@ -1,55 +1,32 @@
 // SPDX-License-Identifier: GPL-2.0
-#include <linux/mm_types.h>
-#include <linux/tracepoint.h>
+#include 
+#include int.h>
 
 #define CREATE_TRACE_POINTS
-#include <trace/events/page_ref.h>
+#include 
 
-void __page_ref_set(struct page *page, int v)
-{
-	trace_page_ref_set(page, v);
-}
-EXPORT_SYMBOL(__page_ref_set);
-EXPORT_TRACEPOINT_SYMBOL(page_ref_set);
+/**
+ * PAGE_REF_WRAPPER - Macro to generate tracepoint wrappers
+ * @name: Name of the page_ref operation
+ * @args: Function arguments after 'struct page *page'
+ *
+ * This reduces boilerplate and ensures consistent export of symbols
+ * and tracepoints across all page_ref operations.
+ */
+#define PAGE_REF_WRAPPER(name, ...)                    \
+void __page_ref_##name(struct page *page, ##__VA_ARGS__) \
+{                                                      \
+	trace_page_ref_##name(page, ##__VA_ARGS__);        \
+}                                                      \
+EXPORT_SYMBOL(__page_ref_##name);                      \
+EXPORT_TRACEPOINT_SYMBOL(page_ref_##name);
 
-void __page_ref_mod(struct page *page, int v)
-{
-	trace_page_ref_mod(page, v);
-}
-EXPORT_SYMBOL(__page_ref_mod);
-EXPORT_TRACEPOINT_SYMBOL(page_ref_mod);
+PAGE_REF_WRAPPER(set, int v)
+PAGE_REF_WRAPPER(mod, int v)
+PAGE_REF_WRAPPER(mod_and_test, int v, int ret)
+PAGE_REF_WRAPPER(mod_and_return, int v, int ret)
+PAGE_REF_WRAPPER(mod_unless, int v, int u)
+PAGE_REF_WRAPPER(freeze, int v, int ret)
+PAGE_REF_WRAPPER(unfreeze, int v)
 
-void __page_ref_mod_and_test(struct page *page, int v, int ret)
-{
-	trace_page_ref_mod_and_test(page, v, ret);
-}
-EXPORT_SYMBOL(__page_ref_mod_and_test);
-EXPORT_TRACEPOINT_SYMBOL(page_ref_mod_and_test);
-
-void __page_ref_mod_and_return(struct page *page, int v, int ret)
-{
-	trace_page_ref_mod_and_return(page, v, ret);
-}
-EXPORT_SYMBOL(__page_ref_mod_and_return);
-EXPORT_TRACEPOINT_SYMBOL(page_ref_mod_and_return);
-
-void __page_ref_mod_unless(struct page *page, int v, int u)
-{
-	trace_page_ref_mod_unless(page, v, u);
-}
-EXPORT_SYMBOL(__page_ref_mod_unless);
-EXPORT_TRACEPOINT_SYMBOL(page_ref_mod_unless);
-
-void __page_ref_freeze(struct page *page, int v, int ret)
-{
-	trace_page_ref_freeze(page, v, ret);
-}
-EXPORT_SYMBOL(__page_ref_freeze);
-EXPORT_TRACEPOINT_SYMBOL(page_ref_freeze);
-
-void __page_ref_unfreeze(struct page *page, int v)
-{
-	trace_page_ref_unfreeze(page, v);
-}
-EXPORT_SYMBOL(__page_ref_unfreeze);
-EXPORT_TRACEPOINT_SYMBOL(page_ref_unfreeze);
+#undef PAGE_REF_WRAPPER
